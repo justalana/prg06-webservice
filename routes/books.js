@@ -1,6 +1,7 @@
 import express from "express";
 import Book from "../Models/Book.js";
 import {faker} from "@faker-js/faker";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -157,6 +158,34 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+const JWT_SECRET = process.env.JWT_SECRET;
+const USERNAME = "test123";
+const PASSWORD = "test123";
+router.post("/login", (req, res) => {
+
+    const authHeader = req.headers.authorization;
+    const base64Credentials = authHeader.split(" ")[1];
+    const credentials = Buffer.from(base64Credentials, "base64").toString("ascii");
+    const [username, password] = credentials.split(":");
+
+    try {
+        if (username !== USERNAME || password !== PASSWORD) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+
+        const token = jwt.sign(
+            {
+                username: USERNAME,
+            },
+            JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+
+        res.status(200).json({ message: "Login successful", token});
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 
 export default router;
