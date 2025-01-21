@@ -4,27 +4,6 @@ import {faker} from "@faker-js/faker";
 
 const router = express.Router();
 
-router.post(`/seed`, async (req, res) => {
-    try {
-        await Book.deleteMany({});
-        const amount = req.body.amount;
-
-        for (let i = 0; i < amount; i++) {
-            await Book.create({
-                title: faker.book.title(),
-                description: faker.lorem.lines({ min: 1, max: 2}),
-                author: faker.book.author(),
-            });
-
-        }
-
-        res.status(200).json({succes:true})
-
-    } catch(error) {
-        res.json({error: error.message});
-    }
-});
-
 router.options('/', (req, res) => {
     res.setHeader('Allow', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Methods', ['GET, POST, OPTIONS']);
@@ -87,13 +66,31 @@ router.post(`/`, async (req, res) => {
     try {
         const {title, description, author} = req.body;
 
-        const book= await Book.create({
-            title: title,
-            description: description,
-            author: author,
-        });
+        if (req.body.method === "SEED") {
+            await Book.deleteMany({});
+            const amount = req.body.amount;
 
-        res.status(201).json(book)
+            for (let i = 0; i < amount; i++) {
+                await Book.create({
+                    title: faker.book.title(),
+                    description: faker.lorem.lines({ min: 1, max: 2}),
+                    author: faker.book.author(),
+                });
+
+            }
+
+            res.status(200).json({succes:true})
+        } else {
+            const book= await Book.create({
+                title: title,
+                description: description,
+                author: author,
+            });
+
+            res.status(201).json(book)
+        }
+
+
 
     } catch(error) {
         res.status(400).json({error: error.message});
@@ -111,7 +108,12 @@ router.get('/:id', async (req, res) => {
 
     try {
         const books = await Book.findOne({_id:bookId});
-        res.status(200).json(books);
+
+        if(!books || books.length === 0) {
+            res.status(404).json({ message: "this books does not exist"})
+        } else {
+            res.status(200).json(books);
+        }
     } catch(error) {
         res.status(404).json({error: error.message});
     }
