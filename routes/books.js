@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
 
 router.post(`/`, async (req, res) => {
     try {
-        const {title, description, author} = req.body;
+        const {title, description, author, pages, genre} = req.body;
 
         if (req.body.method === "SEED") {
             await Book.deleteMany({});
@@ -74,8 +74,10 @@ router.post(`/`, async (req, res) => {
             for (let i = 0; i < amount; i++) {
                 await Book.create({
                     title: faker.book.title(),
-                    description: faker.lorem.lines({ min: 1, max: 2}),
+                    description: faker.lorem.lines({ min: 5, max: 8}),
                     author: faker.book.author(),
+                    pages: faker.number.int({max: 1000}),
+                    genre: faker.book.genre()
                 });
 
             }
@@ -86,6 +88,8 @@ router.post(`/`, async (req, res) => {
                 title: title,
                 description: description,
                 author: author,
+                pages: pages,
+                genre: genre,
             });
 
             res.status(201).json(book)
@@ -132,6 +136,12 @@ router.put('/:id', async (req, res) => {
     }
     if (!updatedData.author || updatedData.author === '') {
         return res.status(400).json({error: 'Author cannot be empty'});
+    }
+    if (!updatedData.pages || updatedData.pages === '') {
+        return res.status(400).json({error: 'Pages cannot be empty'});
+    }
+    if (!updatedData.genre || updatedData.genre === '') {
+        return res.status(400).json({error: 'Genre cannot be empty'});
     }
 
     try {
